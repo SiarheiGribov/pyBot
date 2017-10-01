@@ -50,7 +50,7 @@ def check(wl, title, URL, diff_text, revid, oldid):
         while n < len(reg) - 1:  # если в новой странице есть слова на заданное окончание (феминитивное окончание без последней буквы)
             n += 1
             word = reg[n].lower()
-            regBase = re.findall(ur'\b(\w*?)' + unicode(end[s])[:-1] + ur'\b', unicode(word), flags=re.U|re.I) # ищем базовое слово (в именительном падаже мужского рода
+            regBase = re.findall(ur'\b(\w*?)' + unicode(end[s])[:-1] + ur'\b', unicode(word), flags=re.U|re.I) # ищем базовое слово (в именительном падаже мужского рода)
             if len(regBase) > 0:
                 if regBase[0] <> "":
                     checkWL = regBase[0]
@@ -88,7 +88,7 @@ def check(wl, title, URL, diff_text, revid, oldid):
                 if unicode(line.strip('\r\n').lower()) not in unicode(reason):
                     reason += ", " + line.strip('\r\n').lower()
 
-    if reason <> "":  # вывод: если есть подозрительные слова
+    if reason <> "":  # вывод, если есть подозрительные слова
             prePub = "{{User:IluvatarBot/Подозрительная правка|" + str(title) + "|" + str(oldid) + "|" + str(revid) + "|" + str(reason) + "|" + str(int(time.time())) + "}}"
             pub.append(prePub)
     if len(pub) > 0:
@@ -100,7 +100,7 @@ def check(wl, title, URL, diff_text, revid, oldid):
         return pubComplete
 # конец функции проверки и выгрузки отчёта
 
-# Запрашиваем все списки (список профессий, белый список, чёрный список), файл с последним таймстампом, id последней проверенной ревизии
+# Запрашиваем все списки (список словоформ, белый список, чёрный список), файл с последним таймстампом, id последней проверенной ревизии
 try:
     URL_BL = 'https://ru.wikipedia.org/w/?action=raw&utf8=1&title=User:IluvatarBot/Феминитивы/Badlist'
     bl = urllib2.urlopen(URL_BL).readlines()
@@ -138,7 +138,7 @@ while i < len(json_parsed['query']['recentchanges']) - 1:
             timest = json_parsed['query']['recentchanges'][i]['timestamp']
             timeid = json_parsed['query']['recentchanges'][i]['revid']
         if not json_parsed['query']['recentchanges'][i]['revid'] == timeid:
-            if str(json_parsed['query']['recentchanges'][i]['old_revid']) == "0":  # если это новая странца
+            if str(json_parsed['query']['recentchanges'][i]['old_revid']) == "0":  # если это новая страница
                 URL1 = "https://ru.wikipedia.org/w/?action=raw&utf8=1&title=" + urllib2.quote(
                     unicode(json_parsed['query']['recentchanges'][i]['title']).encode('utf8'))
                 pb = check(wl, json_parsed['query']['recentchanges'][i]['title'], URL1, urllib2.urlopen(URL1).read(),
@@ -164,9 +164,9 @@ while i < len(json_parsed['query']['recentchanges']) - 1:
             if pb:
                 pb2 += pb
 
-    except urllib2.HTTPError as he: # удалённые и переименновые без перенаправления странцы
+    except urllib2.HTTPError as he: # удалённые и переименованные без перенаправления страницы
         print "Http error during main loop: " + str(he) + ". (" + URL1 + ")"
-    except requests.exceptions.RequestException as rex: # удалённые и переименновые без перенаправления странцы
+    except requests.exceptions.RequestException as rex: # удалённые и переименованные без перенаправления страницы
         print "Rrquest error during main loop: " + str(rex) + ". (" + URL1 + ")"
     except ValueError as ve:  # неудачные запросы (лаг сервера и тп). В общем случае: битый JSON
         print "JSON error during main loop: " + str(ve) + ". (" + URL1 + ")" + " [" + str(diff_parsed0) + "]"
@@ -175,7 +175,7 @@ while i < len(json_parsed['query']['recentchanges']) - 1:
     except KeyError as ke: # скрытые версии
         print "KeyError (bt) error during main loop: " + str(ke) + ". (" + URL1 + ")"
 
-if pb2 <> "":  # если переменная с результатам не пуста, публикуем. Предварительно выпиливая уведомления, размещённые более чем указанное кол-во дней назад
+if pb2 <> "":  # если переменная с результатом не пуста, публикуем. Предварительно выпиливая строки, размещённые более чем указанное кол-во дней назад
     time.sleep(1)
     raportPage_URL = "https://ru.wikipedia.org/w/?action=raw&utf8=1&title=User:IluvatarBot/Феминитивы/Отчёт"
     try:
