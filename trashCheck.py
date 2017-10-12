@@ -59,7 +59,7 @@ def check(wl, title, URL, diff_text, revid, oldid):
                     checkWLReg = re.findall(ur'\b(' + checkWL + ur')\b', unicode(wl), flags=re.U | re.I)
                     if len(checkWLReg) == 0:  # проверка на отсутствие слова в именительном падеже в белом списке
                         reglistP = re.findall(ur'\b(' + checkWL + ur')\b', unicode(listP), flags=re.U | re.I)
-                        if len(reglistP) > 0:
+                        if len(reglistP) > 0: # проверка на присутствие слова в именительном падеже в списке «словоформ»
                             m = 0
                             while m <= 21:  # ищем эти слова в падежных окончаниях по тексту
                                 reg2 = re.findall(ur'\b(' + checkWL + unicode(end[s])[:-1] + unicode(case_end[m]) + ur')\b', unicode(diff_text),
@@ -204,7 +204,7 @@ if pb2 <> "":  # если переменная с результатом не п
     except requests.exceptions.RequestException as e:
         print "Error during get publishing (" + str(e) + ")."
         exit()
-    print pb2  # Закоментировано для снижения веса лога на Лабсе
+    #print pb2   Закоментировано для снижения веса лога на Лабсе
 
 if not str(timest) == "" and not str(timeid) == "":
     time_file = open("time.txt", "w")
