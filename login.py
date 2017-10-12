@@ -25,7 +25,7 @@ import json
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-# функця повтора логна в случае неудачи
+# функця повтора логина в случае неудачи
 def checkLogin():
     print('У вас нет прав, либо требуется повторно войти в систему.')
     print('Повторная попытка входа будет произведена через 15 секунд...')
@@ -54,7 +54,7 @@ def login():
     params3 = '?format=json&action=query&meta=tokens&continue='
     r3 = requests.get('https://ru.wikipedia.org/w/' + 'api.php' + params3, cookies=r2.cookies)
     token = r3.json()['query']['tokens']['csrftoken']
-    # если логнн не удался (не получили токен), повторяем попыткук
+    # если логнн не удался (не получили токен), повторяем попытку
     if not re.findall(r'.*?csrftoken....................', json.dumps(r3.json())):
         print('Не удалось войти в систему. Повторите попытку.')
         checkLogin()
