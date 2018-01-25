@@ -50,7 +50,7 @@ def check(wl, title, URL, diff_text, revid, oldid):
         while n < len(reg) - 1:  # если в новой странице есть слова на заданное окончание (феминитивное окончание без последней буквы)
             n += 1
             word = reg[n].lower()
-            regBase = re.findall(ur'\b(\w*?)' + unicode(end[s])[:-1] + ur'\b', unicode(word), flags=re.U|re.I) # ищем базовое слово (в именительном падаже мужского рода)
+            regBase = re.findall(ur'\b(\w*?)' + unicode(end[s])[:-1] + ur'\b', unicode(word), flags=re.U|re.I) # ищем базовое слово (в именительном падаже мужского рода
             if len(regBase) > 0:
                 if regBase[0] <> "":
                     checkWL = regBase[0]
@@ -67,11 +67,16 @@ def check(wl, title, URL, diff_text, revid, oldid):
                                 if len(reg2) > 0:
                                     j = 0
                                     while j <= len(reg2) - 1:
-                                        if reason == "":
-                                            reason = reg2[j].lower()
-                                        else:
-                                            if unicode(reg2[j].lower()) not in unicode(reason):
-                                                reason += ", " + reg2[j].lower()
+                                        checkWL2 = reg2[j].lower()
+                                        if (unicode("е") in unicode(checkWL2)) or (unicode("ё") in unicode(checkWL2)):  # если в слове есть е/ё, добавляем в паттерн вариабельность
+                                            checkWL2 = re.sub(ur'[е|ё]', u'[е|ё]', unicode(checkWL2))
+                                        checkWLReg2 = re.findall(ur'\b(' + checkWL2 + ur')\b', unicode(wl2), flags=re.U | re.I)
+                                        if len(checkWLReg2) == 0:  # проверка на отсутствие конечного найденного слова во втором белом списке
+                                            if reason == "":
+                                                reason = reg2[j].lower()
+                                            else:
+                                                if unicode(reg2[j].lower()) not in unicode(reason):
+                                                    reason += ", " + reg2[j].lower()
                                         j += 1
                                 m += 1
         s += 1
@@ -87,10 +92,12 @@ def check(wl, title, URL, diff_text, revid, oldid):
             else:
                 if unicode(line.strip('\r\n').lower()) not in unicode(reason):
                     reason += ", " + line.strip('\r\n').lower()
+                    			
 
-    if reason <> "":  # вывод, если есть подозрительные слова
-            prePub = "{{User:IluvatarBot/Подозрительная правка|" + str(title) + "|" + str(oldid) + "|" + str(revid) + "|" + str(reason) + "|" + str(int(time.time())) + "}}"
-            pub.append(prePub)
+    if reason <> "":  # вывод: если есть подозрительные слов
+        prePub = "{{User:IluvatarBot/Подозрительная правка|" + str(title) + "|" + str(oldid) + "|" + str(
+            revid) + "|" + str(reason) + "|" + str(int(time.time())) + "}}"
+        pub.append(prePub)
     if len(pub) > 0:
         w = 0
         pubComplete = ""
@@ -100,18 +107,20 @@ def check(wl, title, URL, diff_text, revid, oldid):
         return pubComplete
 # конец функции проверки и выгрузки отчёта
 
-# Запрашиваем все списки (список словоформ, белый список, чёрный список), файл с последним таймстампом, id последней проверенной ревизии
+# Запрашиваем все списки (список профессий, белый список (сущ. в имен.падеже), конечный белый список, чёрный список), файл с последним таймстампом, id последней проверенной ревизии
 try:
     URL_BL = 'https://ru.wikipedia.org/w/?action=raw&utf8=1&title=User:IluvatarBot/Феминитивы/Badlist'
     bl = urllib2.urlopen(URL_BL).readlines()
     URL_WL = 'https://ru.wikipedia.org/w/?action=raw&utf8=1&title=User:IluvatarBot/Феминитивы/Whitelist'
     wl = urllib2.urlopen(URL_WL).read()
-    listWorks = open('list_of_works.txt')
+    URL_WL2 = 'https://ru.wikipedia.org/w/?action=raw&utf8=1&title=User:IluvatarBot/Феминитивы/Whitelist2'
+    wl2 = urllib2.urlopen(URL_WL2).read()
+    listWorks = open('pyBot/list_of_works.txt')
     listP = listWorks.read()
     listWorks.close()
     timest = ""
     timeid = ""
-    with open('time.txt') as Lines:
+    with open('pyBot/time.txt') as Lines:
         line = Lines.read().splitlines()
     timest = line[0]
     timeid = line[1]
@@ -121,7 +130,7 @@ except urllib2.HTTPError:
 
 token, cookies = login.login()  # логинимся
 try: #Запрашиваем список новых правок
-    payload = {'action': 'query', 'format': 'json', 'list': 'recentchanges', 'rcnamespace': '0|6|10|12|14', #0|6|10|12|14
+    payload = {'action': 'query', 'format': 'json', 'list': 'recentchanges', 'rcnamespace': '0|6|10|12|14',
                'rcprop': 'title|ids|timestamp', 'rcshow': '!redirect|!bot', 'rcend': timest, 'rctype': 'new|edit', 'rclimit': limit,
                'token': token}
     json_parsed = requests.post('https://ru.wikipedia.org/w/api.php', data=payload, cookies=cookies).json()
@@ -138,7 +147,7 @@ while i < len(json_parsed['query']['recentchanges']) - 1:
             timest = json_parsed['query']['recentchanges'][i]['timestamp']
             timeid = json_parsed['query']['recentchanges'][i]['revid']
         if not json_parsed['query']['recentchanges'][i]['revid'] == timeid:
-            if str(json_parsed['query']['recentchanges'][i]['old_revid']) == "0":  # если это новая страница
+            if str(json_parsed['query']['recentchanges'][i]['old_revid']) == "0":  # если это новая странца
                 URL1 = "https://ru.wikipedia.org/w/?action=raw&utf8=1&title=" + urllib2.quote(
                     unicode(json_parsed['query']['recentchanges'][i]['title']).encode('utf8'))
                 pb = check(wl, json_parsed['query']['recentchanges'][i]['title'], URL1, urllib2.urlopen(URL1).read(),
@@ -164,9 +173,9 @@ while i < len(json_parsed['query']['recentchanges']) - 1:
             if pb:
                 pb2 += pb
 
-    except urllib2.HTTPError as he: # удалённые и переименованные без перенаправления страницы
+    except urllib2.HTTPError as he: # удалённые и переименновые без перенаправления странцы
         print "Http error during main loop: " + str(he) + ". (" + URL1 + ")"
-    except requests.exceptions.RequestException as rex: # удалённые и переименованные без перенаправления страницы
+    except requests.exceptions.RequestException as rex: # удалённые и переименновые без перенаправления странцы
         print "Rrquest error during main loop: " + str(rex) + ". (" + URL1 + ")"
     except ValueError as ve:  # неудачные запросы (лаг сервера и тп). В общем случае: битый JSON
         print "JSON error during main loop: " + str(ve) + ". (" + URL1 + ")" + " [" + str(diff_parsed0) + "]"
@@ -175,7 +184,7 @@ while i < len(json_parsed['query']['recentchanges']) - 1:
     except KeyError as ke: # скрытые версии
         print "KeyError (bt) error during main loop: " + str(ke) + ". (" + URL1 + ")"
 
-if pb2 <> "":  # если переменная с результатом не пуста, публикуем. Предварительно выпиливая строки, размещённые более чем указанное кол-во дней назад
+if pb2 <> "":  # если переменная с результатам не пуста, публикуем. Предварительно выпиливая уведомления, размещённые более чем указанное кол-во дней назад
     time.sleep(1)
     raportPage_URL = "https://ru.wikipedia.org/w/?action=raw&utf8=1&title=User:IluvatarBot/Феминитивы/Отчёт"
     try:
@@ -204,10 +213,10 @@ if pb2 <> "":  # если переменная с результатом не п
     except requests.exceptions.RequestException as e:
         print "Error during get publishing (" + str(e) + ")."
         exit()
-    #print pb2   Закоментировано для снижения веса лога на Лабсе
+     #print pb2   Закоментировано для снижения веса лога на Лабсе
 
 if not str(timest) == "" and not str(timeid) == "":
-    time_file = open("time.txt", "w")
+    time_file = open("pyBot/time.txt", "w")
     time_file.write(str(timest).replace("Z", ".000Z") + "\n" + str(timeid))
     time_file.close()
     try: # делаем нулевую правку
@@ -220,4 +229,4 @@ if not str(timest) == "" and not str(timeid) == "":
     except urllib2.HTTPError:
         print "Http error during doing null edit"
         exit()
-    print "Отчёт выгружен"
+    #print "Отчёт выгружен" Закоментировано для снижения веса лога на Лабсе
