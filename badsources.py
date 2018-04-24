@@ -1,7 +1,4 @@
-# coding: utf8
-
-import sys
-# -*- coding: utf-8 -*-import sys
+# -*- coding: utf-8 -*-
 
 import sys
 sys.path.append("C:\Users\Siarhei\Documents\pywikibot\ext_libs")
