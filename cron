@@ -1,5 +1,5 @@
 00 20 * * * jstart -N Helpers -mem 1G /usr/bin/python /data/project/iluvatarbot/pyBot/nonActivitiesHelpers.py
-00 */12 * * * jstart -N Templates -mem 1G /usr/bin/python /data/project/iluvatarbot/pyBot/checkLinksThere.py
+00 02 * * * jstart -N Templates -mem 1G /usr/bin/python /data/project/iluvatarbot/pyBot/checkLinksThere.py
 00 */2 * * * jstart -N Feminisms -mem 1G /usr/bin/python /data/project/iluvatarbot/pyBot/trashCheck.py
 00 */8 * * * jstart -N vers -l release=trusty -mem 1G python3.4 /data/project/iluvatarbot/pyBot/huggle_vers.py
 00 */1 * * * jstart -N levels -l release=trusty -mem 1G python3.4 /data/project/iluvatarbot/pyBot/level_vand.py
