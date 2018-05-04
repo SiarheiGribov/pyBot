@@ -4,6 +4,7 @@ import requests
 import re
 import urllib
 import time
+import ConfigParser
 import datetime
 import login
 import os
@@ -35,6 +36,14 @@ sys.setdefaultencoding('utf8')
 
 if os.path.exists("pyBot/result.txt"):
     os.remove("pyBot/result.txt")
+
+config = ConfigParser.RawConfigParser()
+config.read(os.path.abspath(os.path.dirname(__file__)) + '/bottoken.ini')
+bottoken = (config.get('Token', 'bottoken'))
+
+payload3 = {'action': 'refreshtemplates', 'bottoken': bottoken}
+r3 = requests.post('https://tools.wmflabs.org/iluvatarbot/remove.php', data=payload2)
+
 
 
 def check(target):
@@ -89,8 +98,7 @@ def check(target):
     title = re.findall(r'title\":\"(.*?)\"\}', html2)
 
     n = 0
-    print "\033[92mВсего страниц для проверки по шаблону " + target2[0] + ": " + str(
-        len(title)) + ". Проверка может занять длительное время.\033[0m"
+    #print "\033[92mВсего страниц для проверки по шаблону " + target2[0] + ": " + str(len(title)) + ". Проверка может занять длительное время.\033[0m"
 
     # Получаем все ссылки 4 пространтсва мён, которые имеются на странице, и вытаскиваем из них имя страницы номинации
     while n <= len(title) - 1:
@@ -179,7 +187,23 @@ def check(target):
                             my_file = open("pyBot/result.txt", "w")
                         my_file.write(text.encode('utf8') + "\n")
                         my_file.close()
-                        print "\033[91m" + title[n] + ": нет параметра даты\033[0m"
+
+                        type = ""
+                        if ( str(target2[0]) == 'К удалению' ):
+                            type = 'delete'
+                        if (str(target2[0]) == 'К улучшеню'):
+                            type = 'improve'
+                        if (str(target2[0]) == 'К разделению'):
+                            type = 'separation'
+                        if (str(target2[0]) == 'К объединению'):
+                            type = 'union'
+                        if (str(target2[0]) == 'К переименованию'):
+                            type = 'rename'
+
+                        payload2 = {'type': 'templates', 'title': str(title[n]), 'link': str(0), 'stype': str(type), 'bottoken': bottoken}
+                        r2 = requests.post('https://tools.wmflabs.org/iluvatarbot/remove.php', data=payload2)
+
+                        #print "\033[91m" + title[n] + ": нет параметра даты\033[0m"
                 else:
                     if not link[0] in txt:
                         # Небольшой симпатичный костыльчик, для отсечения шаблона с nocat. Минус в том, что
@@ -218,7 +242,23 @@ def check(target):
                                 my_file = open("pyBot/result.txt", "w")
                             my_file.write(text.encode('utf8') + "\n")
                             my_file.close()
-                            print '\033[91m' + title[n] + ': ' + link[0] + '\033[0m'
+
+                            type = ""
+                            if ( str(target2[0]) == 'К удалению' ):
+                                type = 'delete'
+                            if (str(target2[0]) == 'К улучшеню'):
+                                type = 'improve'
+                            if (str(target2[0]) == 'К разделению'):
+                                type = 'separation'
+                            if (str(target2[0]) == 'К объединению'):
+                                type = 'union'
+                            if (str(target2[0]) == 'К переименованию'):
+                                type = 'rename'
+
+                            payload2 = {'type': 'templates', 'title': str(title[n]), 'link': str(link[0]), 'stype': str(type), 'bottoken': bottoken}
+                            r2 = requests.post('https://tools.wmflabs.org/iluvatarbot/remove.php', data=payload2)
+
+                            #print '\033[91m' + title[n] + ': ' + link[0] + '\033[0m'
             n = n + 1
         else:
             n = n + 1
@@ -252,4 +292,4 @@ if os.path.exists("pyBot/result.txt"):
                'summary': 'Выгрузка отчёта', 'token': token}
     r4 = requests.post('https://ru.wikipedia.org/w/api.php', data=payload, cookies=cookies)
     os.remove("pyBot/result.txt")
-    print "\033[92mОтчёт загружен.\033[0m"
+    #print "\033[92mОтчёт загружен.\033[0m"

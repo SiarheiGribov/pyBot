@@ -5,8 +5,10 @@ import requests
 import urllib2
 import json
 import re
+import os
 import time
 import login
+import ConfigParser
 from BeautifulSoup import BeautifulSoup
 from HTMLParser import HTMLParseError
 reload(sys)
@@ -37,8 +39,13 @@ limit = 5000 # количество досматриваемых правок. �
 days_history = 14 # количество дней, по истечению которых бот удалит уведомляющий шаблон из отчёта как утративший актуальность
 # -------------------------------------------------
 
+
+config = ConfigParser.RawConfigParser()
+config.read(os.path.abspath(os.path.dirname(__file__)) + '/bottoken.ini')
+bottoken = (config.get('Token', 'bottoken'))
+
 # функция проверки и выгрузки отчёта
-def check(wl, title, URL, diff_text, revid, oldid):
+def check(wl, title, URL, diff_text, revid, oldid, user):
     s = 0
     reason = ""
     end = ['ка', 'ша', 'шей', 'иня', 'иней', 'ня', 'яка', 'ица', 'ицей', 'иха', 'чка', 'ичка', 'есса', 'эсса']
@@ -97,6 +104,18 @@ def check(wl, title, URL, diff_text, revid, oldid):
     if reason <> "":  # вывод: если есть подозрительные слов
         prePub = "{{User:IluvatarBot/Подозрительная правка|" + str(title) + "|" + str(oldid) + "|" + str(
             revid) + "|" + str(reason) + "|" + str(int(time.time())) + "}}"
+
+
+        if (oldid == '0'):
+            oldidbot = oldid
+            diffid = 0
+        else:
+            oldidbot = oldid
+            diffid = revid
+        payload2 = {'type': 'fem', 'user': str(user), 'oldid': str(oldidbot), 'diff': str(
+            diffid), 'title': str(title), 'reason': str(reason), 'bottoken': bottoken}
+        r2 = requests.post('https://tools.wmflabs.org/iluvatarbot/remove.php', data=payload2)
+
         pub.append(prePub)
     if len(pub) > 0:
         w = 0
@@ -131,7 +150,7 @@ except urllib2.HTTPError:
 token, cookies = login.login()  # логинимся
 try: #Запрашиваем список новых правок
     payload = {'action': 'query', 'format': 'json', 'list': 'recentchanges', 'rcnamespace': '0|6|10|12|14',
-               'rcprop': 'title|ids|timestamp', 'rcshow': '!redirect|!bot', 'rcend': timest, 'rctype': 'new|edit', 'rclimit': limit,
+               'rcprop': 'title|ids|user|timestamp', 'rcshow': '!redirect|!bot', 'rcend': timest, 'rctype': 'new|edit', 'rclimit': limit,
                'token': token}
     json_parsed = requests.post('https://ru.wikipedia.org/w/api.php', data=payload, cookies=cookies).json()
 except requests.exceptions.RequestException:
@@ -151,7 +170,7 @@ while i < len(json_parsed['query']['recentchanges']) - 1:
                 URL1 = "https://ru.wikipedia.org/w/?action=raw&utf8=1&title=" + urllib2.quote(
                     unicode(json_parsed['query']['recentchanges'][i]['title']).encode('utf8'))
                 pb = check(wl, json_parsed['query']['recentchanges'][i]['title'], URL1, urllib2.urlopen(URL1).read(),
-                           str(json_parsed['query']['recentchanges'][i]['revid']), 0)
+                           str(json_parsed['query']['recentchanges'][i]['revid']), 0, str(json_parsed['query']['recentchanges'][i]['user']))
             else:  # если это обычная правка на существующей странице
                 URL1 = "https://ru.wikipedia.org/w/api.php?action=compare&format=json&prop=diff&utf8=1&fromrev=" + str(
                     json_parsed['query']['recentchanges'][i]['old_revid']) + "&torev=" + str(
@@ -169,7 +188,8 @@ while i < len(json_parsed['query']['recentchanges']) - 1:
                             diff += str(diffAdd2) + "\n"
                 pb = check(wl, json_parsed['query']['recentchanges'][i]['title'], URL1, diff,
                            str(json_parsed['query']['recentchanges'][i]['revid']),
-                           str(json_parsed['query']['recentchanges'][i]['old_revid']))
+                           str(json_parsed['query']['recentchanges'][i]['old_revid']), str(json_parsed['query']['recentchanges'][i]['user']))
+
             if pb:
                 pb2 += pb
 
