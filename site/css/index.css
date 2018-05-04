@@ -1,0 +1,92 @@
+body, html {
+    height: 100%;
+}
+th {
+    text-align: center;
+}
+.auth_warning {
+	background-color: red;
+}
+.welcome {
+	margin-top: 15%;
+}
+.table_sources, .table_templates, .table_fem {
+    display: none;
+    margin-left: 100px;
+    margin-right: 100px;
+    max-height: 75%;
+    overflow-y: auto;
+}
+.table_marg {
+	margin-left: 5px;
+	margin-right: 5px;
+}
+.work {
+    margin-top: 10%;
+}
+.btn-lg {
+    width: 250px;
+}
+.btn-start {
+    margin-top: 10px;
+}
+.header_bar {
+    width: 100%;
+}
+.foot {
+    display: none;
+    margin-bottom: 10%;
+	margin-left: 100px;
+    margin-right: 100px;
+}
+.rcolor {
+    color: red;
+}
+.icolor {
+    color: #00e600;
+}
+.caption_s, .caption_t, .caption_f {
+    display: none;
+    margin-top: 20px;
+    margin-bottom: 5px;
+    color: gray;
+    margin-left: 100px;
+    margin-right: 100px;
+}
+.t_start {
+    max-width: 100px;
+    min-width: 100px;
+    padding-left: 5px;
+    text-align: center;
+    word-break: normal;
+}
+.t_body {
+    max-width: 150px;
+    min-width: 150px;
+    text-align: center;
+    word-break: normal;
+}
+.t_end {
+    position: relative;
+    text-align: center;
+}
+.t_btn {
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin: 0;
+    line-height: 36px;
+    width: 100%;
+}
+.btn_back {
+    margin-left: 8px;
+    margin-top: 4px;
+    display: none;
+    float: left;
+}
+.btn_logout {
+    margin-right: 8px;
+    margin-top: 4px;
+    display: inline-block;
+    float: right;
+}
