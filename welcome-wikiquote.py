@@ -60,3 +60,4 @@ for user in userinfo:
                     random_index = randrange(0, len(signList))
                     sign = signList[random_index]
                     payload = {'action': 'edit', 'format': 'json', 'title': 'User talk:' + user['name'], 'utfl8': '', 'createonly': '', 'notminor': '', 'text': sign, 'summary': u'Добро пожаловать!', 'token': token}
+                    r_edit = requests.post('https://ru.wikipedia.org/w/api.php', data=payload, cookies=cookies)
