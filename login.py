@@ -54,6 +54,7 @@ def login():
     params3 = '?format=json&action=query&meta=tokens&continue='
     r3 = requests.get('https://ru.wikipedia.org/w/' + 'api.php' + params3, cookies=r2.cookies)
     token = r3.json()['query']['tokens']['csrftoken']
+    
     # если логнн не удался (не получили токен), повторяем попытку
     if not re.findall(r'.*?csrftoken....................', json.dumps(r3.json())):
         print('Не удалось войти в систему. Повторите попытку.')
