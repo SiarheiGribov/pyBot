@@ -24,8 +24,8 @@ def get_values(id):
         y.append(el[1])
     return x, y
 
-val1 = get_values(94)
-val2 = get_values(102)
+val1 = get_values(94) # module
+val2 = get_values(102) # panel
 
 fig_size = plt.rcParams["figure.figsize"]
 fig_size[0] = 20
