@@ -2,6 +2,7 @@
 # -- coding: utf-8 --
 
 import json
+import time
 import requests
 from sseclient import SSEClient as EventSource
 import login
@@ -9,18 +10,32 @@ import login
 url = 'https://stream.wikimedia.org/v2/stream/revision-create'
 API_url = "https://ru.wikinews.org/w/api.php"
 
-for event in EventSource(url):
-    if event.event == 'message':
-        try:
-            change = json.loads(event.data)
-        except ValueError:
-            pass
-        else:
-            if change["database"] == "ruwikinews" and change["page_namespace"] == 0 and "rev_parent_id" not in change:
-                token, cookies = login.login(server="ru.wikinews")
-                params = {
-                    "action": "edit", "format": "json", "utf8": "1", "title": "Комментарии:" + change["page_title"],
-                    "createonly": 1, "text": "{{комментарии2}} <!-- Оставьте эту строчку. Пишите комментарий ниже. -->",
-                    "summary": "", "token": token
-                }
-                requests.post(url=API_url, params=params, cookies=cookies)
+
+def handler(change):
+    if change["database"] == "ruwikinews" and change["page_namespace"] == 0 and "rev_parent_id" not in change:
+        token, cookies = login.login(server="ru.wikinews")
+        params = {
+            "action": "edit", "format": "json", "utf8": "1", "title": "Комментарии:" + change["page_title"],
+            "createonly": 1, "text": "{{комментарии2}} <!-- Оставьте эту строчку. Пишите комментарий ниже. -->",
+            "summary": "", "token": token
+        }
+        requests.post(url=API_url, params=params, cookies=cookies)
+
+
+def start():
+    try:
+        for event in EventSource(url, retry=30000):
+            if event.event == 'message':
+                try:
+                    change = json.loads(event.data)
+                except ValueError:
+                    pass
+                else:
+                    handler(change)
+    except Exception:
+        print("HTTP error")
+        time.sleep(30)
+        start()
+
+
+start()
