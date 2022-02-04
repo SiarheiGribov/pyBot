@@ -17,7 +17,7 @@ def handler(change):
         data = {
             "action": "edit", "format": "json", "utf8": "1", "title": "Комментарии:" + change["page_title"],
             "createonly": 1, "text": "{{комментарии2}} <!-- Оставьте эту строчку. Пишите комментарий ниже. -->",
-            "summary": "", "token": token
+            "summary": "Создание страницы комментариев", "token": token
         }
         requests.post(url=API_url, data=data, cookies=cookies)
 
