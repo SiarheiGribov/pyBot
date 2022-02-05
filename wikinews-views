@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+# -- coding: utf-8 --
+
+import re
+import time
+from datetime import datetime, timedelta
+import requests
+import login
+
+# Исключаемые ПИ. Надо бы брать ПИ из API вообще-т...
+exl = ["Медиа", "Служебная", "Обсуждение", "Участник", "Обсуждение участника", "Викиновости", "Обсуждение Викиновостей",
+       "Файл", "Обсуждение файла", "MediaWiki", "Обсуждение MediaWiki", "Шаблон", "Обсуждение шаблона",
+       "Справка", "Обсуждение справки", "Категория", "Обсуждение категории", "Портал", "Обсуждение портала",
+       "Комментарии", "Обсуждение комментариев", "Модуль", "Обсуждение модуля", "Гаджет", "Обсуждение гаджета",
+       "Определение гаджета", "Обсуждение определения гаджета", "Участница", "Обсуждение участницы"]
+ua = {"User-agent": "pyBot/pageviews (toolforge/iluvatarbot; iluvatar@tools.wmflabs.org) requests"}
+yesterday = datetime.now() - timedelta(1)
+API_url = "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/ru.wikinews/all-access/" + yesterday.strftime(
+    "%Y") + "/" + yesterday.strftime("%m") + "/" + yesterday.strftime("%d")
+
+
+def getData():
+    try:
+        r = requests.get(url=API_url, headers=ua).json()["items"][0]["articles"]
+    except:
+        time.sleep(30)
+        getData()
+    else:
+        handler(r)
+
+
+def handler(r):
+    top = {}
+    i = 0
+    for article in r:
+        name = str(article["article"].replace("_", " "))
+        check = True
+        for e in exl:
+            if bool(re.search(r'(' + e + ':)', name)):
+                check = False
+        if check and name != "Заглавная страница":
+            top[i] = {}
+            top[i]["name"] = name
+            top[i]["views"] = article["views"]
+            i += 1
+            if i == 11:
+                break
+
+    page_header = "{{Самые популярные новости/Заголовок 2|$1 {{subst:#switch:$2|01=января|02=февраля|03=марта|04=апреля|05=мая|06=июня|07=июля|08=августа|09=сентября|10=октября|11=ноября|12=декабря}}|$3}}"
+    page_top = "<table style='padding-left:5px;padding-right:5px;vertical-align:top'>"
+    page_line = "<tr><td>• [[$1]]</td><td style='text-align:right;vertical-align:top'>{{num|$2}}</td></tr>"
+    page_footer = "</table><noinclude>Данный список формируется на основе данных, полученных из [https://wikimedia.org/api/rest_v1/ Wikimedia Rest API]. В количестве просмотров учитываются посещения страниц как людьми, так и автоматизированными программами, поэтому следует иметь ввиду, что данные могут быть подвержены искажениям, хотя в целом отражают реальный интерес к той или иной новости. В статистике учитываются просмотры за период с 00:00:00 до 23:59:59 по [[Всемирное координированное время|Всемирному координированному времени]] (UTC). Статистика обновляется автоматически по окончанию дня.</div>\n\n[[Категория:Викиновости:Шаблоны|Самые популярные новости]]\n[[Категория:Викиновости:Статистика и прогнозы|Самые популярные новости]]\n</noinclude>"
+
+    page = page_header.replace("$1", re.sub("^0", "", yesterday.strftime("%d"))).replace("$2", yesterday.strftime("%m")).replace("$3", yesterday.strftime("%Y")) + "\n" + page_top + "\n"
+    for t in top:
+        page += page_line.replace("$1", str(top[t]["name"])).replace("$2", str(top[t]["views"])) + "\n"
+    page += page_footer
+
+    post(page)
+
+
+def post(page):
+    token, cookies = login.login(server="ru.wikinews")
+    params = {
+        "action": "edit", "format": "json", "utf8": "1", "title": "Шаблон:Самые популярные новости 2", "text": page,
+        "summary": "Обновление статистики", "token": token
+    }
+    requests.post(url="https://ru.wikinews.org/w/api.php", data=params, cookies=cookies).json()
+
+
+getData()
