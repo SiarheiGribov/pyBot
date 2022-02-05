@@ -65,7 +65,7 @@ def post(page):
         "action": "edit", "format": "json", "utf8": "1", "title": "Шаблон:Самые популярные новости 2", "text": page,
         "summary": "Обновление статистики", "token": token
     }
-    requests.post(url="https://ru.wikinews.org/w/api.php", data=params, cookies=cookies).json()
+    requests.post(url="https://ru.wikinews.org/w/api.php", data=params, cookies=cookies)
 
 
 getData()
