@@ -12,14 +12,19 @@ API_url = "https://ru.wikinews.org/w/api.php"
 
 
 def handler(change):
-    if change["database"] == "ruwikinews" and change["page_namespace"] == 0 and "rev_parent_id" not in change and change["page_is_redirect"] == False:
-        token, cookies = login.login(server="ru.wikinews")
-        data = {
-            "action": "edit", "format": "json", "utf8": "1", "title": "Комментарии:" + change["page_title"],
-            "createonly": 1, "text": "{{комментарии2}} <!-- Оставьте эту строчку. Пишите комментарий ниже. -->",
-            "summary": "Создание страницы комментариев", "token": token
-        }
-        requests.post(url=API_url, data=data, cookies=cookies)
+    if change["database"] == "ruwikinews" and "rev_parent_id" not in change and change["page_is_redirect"] == False:
+        if change["page_namespace"] == 0 or change["page_namespace"] == 14:
+            token, cookies = login.login(server="ru.wikinews")
+            params = {"action": "edit", "format": "json", "utf8": "1", "createonly": 1, "token": token}
+            if change["page_namespace"] == 0:
+                params["title"] = "Комментарии:" + str(change["page_title"])
+                params["text"] = "{{комментарии2}} <!-- Оставьте эту строчку. Пишите комментарий ниже. -->"
+                params["summary"] = "Создание страницы комментариев"
+            if change["page_namespace"] == 14:
+                params["title"] = str(change["page_title"]).replace("Категория:", "")
+                params["text"] = "#перенаправление [[" + str(change["page_title"]) + "]]"
+                params["summary"] = "Создание перенаправления для категории"
+            requests.post(url=API_url, data=params, cookies=cookies)
 
 
 def start():
