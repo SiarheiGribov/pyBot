@@ -38,7 +38,7 @@ def handler(members, task):
     if len(news) > 0:
         params = {
             "action": "edit", "format": "json", "utf8": "1", "title": str(task["landing"]), "nocreate": 1,
-            "text": "\n".join(news), "summary": "Обновление ленты новостей", "token": token
+            "text": "\n".join(news), "summary": "Обновление ленты новостей", "bot": 1, "token": token
         }
         requests.post(url=wp_API, data=params, cookies=cookies)
 
@@ -70,7 +70,7 @@ def getData(task):
         res = requests.post(url=wn_API, data=params, headers=ua).json()["query"]["categorymembers"]
     except:
         time.sleep(30)
-        getData()
+        getData(task)
     else:
         handler(res, task)
 
