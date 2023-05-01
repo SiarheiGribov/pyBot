@@ -1,6 +1,8 @@
 import re
 import time
 from random import randrange
+import configparser
+import redis
 import requests
 import login
 
@@ -9,6 +11,12 @@ BL_URL = 'https://ru.wikipedia.org/w/?action=raw&utf8=1&title=User:IluvatarBot/B
 REPORT_URL = 'https://ru.wikipedia.org/w/?action=raw&utf8=1&title=User:IluvatarBot/Report'
 API_URL = 'https://ru.wikipedia.org/w/api.php'
 USER_AGENT = {"User-Agent": "IluvatarBot; iluvatar@tools.wmflabs.org; python3.9; requests"}
+
+cp = configparser.ConfigParser()
+cp.read('pyBot/credentials.ini')
+redis_token = cp['general']['redis']
+config = redis.Redis(host='redis.svc.tools.eqiad1.wikimedia.cloud', port=6379, db=0,
+                     charset="utf-8", decode_responses=True)
 
 while True:
     bad_list, users_list, reasons, old_lines = [], [], [], []
@@ -19,22 +27,19 @@ while True:
     [bad_list.append(re.sub(r'^\*', '', line)) for line in bl if re.match(r'^\*', line)]
     # Список подписей
     sign_list = ["{0} {1}{2}{3}".format("{{Hello}}", "{{subst:Подпись наставника|",
-                                        sign_data_mentors[user]["username"], "}}" ) for user in sign_data_mentors
+                                        sign_data_mentors[user]["username"], "}}") for user in sign_data_mentors
                  if sign_data_mentors[user]["automaticallyAssigned"] is True]
-    
-    with open('pyBot/wikipedia/service/timeWelcome.txt') as lines:
-        line = lines.read().splitlines()
-        lines.close()
-    timestamp, rc_id = line[0], line[1]
+
+    storage = config.hgetall(f'{redis_token}:pyBot:ruwp:welcome')
+    timestamp, rc_id = storage['timestamp'], str(storage['rcid'])
 
     # Получаем список юзеров из свежих правок
     payload = {'action': 'query', 'format': 'json', 'list': 'recentchanges', 'rcprop': 'user|timestamp|ids',
                'rcshow': '!bot|!anon', 'rctype': 'new|edit', 'rcend': timestamp, 'rclimit': 5000}
     r_changes = requests.post(API_URL, headers=USER_AGENT, data=payload, cookies=cookies).json()
     users = r_changes["query"]["recentchanges"]
-    time_file = open("pyBot/wikipedia/service/timeWelcome.txt", "w")
-    time_file.write("{0}\n{1}".format(str(users[0]["timestamp"]), str(users[0]["rcid"])))
-    time_file.close()
+    config.hset(f'{redis_token}:pyBot:ruwp:welcome', mapping={'timestamp': users[0]["timestamp"],
+                                                              'rcid': users[0]["rcid"]})
 
     n = 1
     for user in users:
